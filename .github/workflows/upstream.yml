@@ -50,11 +50,10 @@ jobs:
         git rm -r --cache * >/dev/null 2>&1 &
         rm -rf `find ./* -maxdepth 0 -type d ! -name ".github/diy"` >/dev/null 2>&1
         function git_clone() {
-          git clone --depth 1 $1 $2
-          if [ "$?" != 0 ]; then
-            echo "error on $1"
-            pid="$( ps -q $$ )"
-            kill $pid
+          local url="$1" target="$2"
+          if ! timeout 300 git clone --depth 1 "$url" "$target"; then
+            echo "❌ Failed to clone $url"
+            return 1  # Не kill $pid!
           fi
         }
         function git_sparse_clone() {
