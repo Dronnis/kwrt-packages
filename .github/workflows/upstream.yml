@@ -50,11 +50,16 @@ jobs:
         git rm -r --cache * >/dev/null 2>&1 &
         rm -rf `find ./* -maxdepth 0 -type d ! -name ".github/diy"` >/dev/null 2>&1
         function git_clone() {
-          local url="$1" target="$2"
-          if ! timeout 300 git clone --depth 1 "$url" "$target"; then
-            echo "❌ Failed to clone $url"
-            return 1  # Не kill $pid!
+          local url="$1"
+          local target="${2:-$(basename "$1" .git)}"  # ← если $2 не задан, берём имя репо из URL
+          
+          echo "🔄 Cloning: $url → $target" >&2
+          
+          if ! timeout 300 git clone --depth 1 --quiet "$url" "$target" 2>&1; then
+            echo "❌ ERROR: Failed to clone $url" >&2
+            return 1
           fi
+          return 0
         }
         function git_sparse_clone() {
         trap 'rm -rf "$tmpdir"' EXIT
